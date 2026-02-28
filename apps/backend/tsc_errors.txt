@@ -1,0 +1,4 @@
+﻿apps/backend/src/config/loader.ts(33,21): error TS2352: Conversion of type 'Record<string, unknown>' to type 'AppConfig' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type 'Record<string, unknown>' is missing the following properties from type 'AppConfig': include_keywords, exclude_keywords, locations, reddit, and 6 more.
+apps/backend/src/config/loader.ts(33,31): error TS2345: Argument of type 'AppConfig' is not assignable to parameter of type 'Record<string, unknown>'.
+  Index signature for type 'string' is missing in type 'AppConfig'.

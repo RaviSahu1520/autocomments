@@ -1,0 +1,2 @@
+apps/discord-bot/src/index.ts(90,55): error TS18046: 'result' is of type 'unknown'.
+apps/discord-bot/src/index.ts(90,77): error TS18046: 'result' is of type 'unknown'.

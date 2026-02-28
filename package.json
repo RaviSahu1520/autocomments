@@ -1,0 +1,25 @@
+{
+  "name": "autocomments-app",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/backend",
+    "apps/discord-bot"
+  ],
+  "scripts": {
+    "dev": "concurrently -n backend,bot -c blue,green \"npm run dev -w apps/backend\" \"npm run dev -w apps/discord-bot\"",
+    "dev:backend": "npm run dev -w apps/backend",
+    "dev:bot": "npm run dev -w apps/discord-bot",
+    "build": "npm run build -w apps/backend && npm run build -w apps/discord-bot",
+    "start": "concurrently -n backend,bot -c blue,green \"npm start -w apps/backend\" \"npm start -w apps/discord-bot\"",
+    "start:backend": "npm start -w apps/backend",
+    "test": "npm test -w apps/backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
