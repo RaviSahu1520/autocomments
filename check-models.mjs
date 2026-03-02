@@ -1,7 +1,11 @@
-const API_KEY = 'sk-EQB15nr1hg9jVznCktGuUBa3P21mzXd39awfkFgWZj9JiWrD1JjgaEiSMabFRiOb';
+const API_KEY = process.env.OPENCODE_API_KEY || process.env.LLM_API_KEY || '';
 const BASE_URL = 'https://opencode.ai/zen/v1';
 
 async function main() {
+    if (!API_KEY) {
+        throw new Error('Missing API key. Set OPENCODE_API_KEY (or LLM_API_KEY) in your environment.');
+    }
+
     const res = await fetch(`${BASE_URL}/models`, {
         headers: { 'Authorization': `Bearer ${API_KEY}` }
     });

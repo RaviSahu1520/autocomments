@@ -8,6 +8,9 @@ This project is a monorepo utilizing npm workspaces:
 
 - **`apps/backend`**: The core API, pipeline processor, LLM integrations (OpenAI), and notification distributors (Discord, Slack, SMTP).
 - **`apps/discord-bot`**: A Discord bot that monitors channels for specific keywords and forwards them to the backend for scoring and notification.
+- Backend now includes: Approval Queue, Config + Hinglish toggle, Instagram compliant ingestion module, Reports, and Exports (CSV/JSON/Excel-compatible).
+
+Legacy prototype code may still exist under root `src/`, but it is not used by the workspace scripts (`dev`, `start`, `build`, `test`).
 
 ## Prerequisites
 
@@ -28,10 +31,16 @@ You can run the entire stack or individual applications using the provided npm s
 
 ### Development Mode
 
-Run both the backend and discord-bot concurrently in watch mode:
+Run backend only (recommended default):
 
 ```bash
 npm run dev
+```
+
+Run backend + Discord bot together:
+
+```bash
+npm run dev:all
 ```
 
 Or run them individually:
@@ -49,16 +58,23 @@ Build both applications:
 npm run build
 ```
 
-Start the compiled applications concurrently:
+Start backend only:
 
 ```bash
 npm start
 ```
 
+Start backend + Discord bot together:
+
+```bash
+npm run start:all
+```
+
 Or start them individually:
 
 ```bash
-npm start:backend
+npm run start:backend
+npm run start:bot
 ```
 
 ## Testing
@@ -67,6 +83,12 @@ Run tests across the apps:
 
 ```bash
 npm test
+```
+
+Run pre-release safety checks:
+
+```bash
+npm run release:check
 ```
 
 ## Configuration

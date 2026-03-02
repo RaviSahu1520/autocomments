@@ -287,13 +287,14 @@ function renderActions(status: string, id: string, draft: any, approval: any): s
               <option value="no_link">No Link</option>
             </select>
           </div>
-          <div class="btn-group">
-            <button type="submit" class="btn btn-success">✓ Approve</button>
-            <button type="submit" formaction="/opportunity/${id}/reject" class="btn btn-danger">✗ Reject</button>
-          </div>
+          <button type="submit" class="btn btn-success">✓ Approve</button>
         </form>
-        <form method="POST" action="/opportunity/${id}/reject" class="mt-2">
-          <input type="text" name="reason" placeholder="Rejection reason (optional)">
+        <form method="POST" action="/opportunity/${id}/reject" class="action-form mt-2">
+          <div class="form-group">
+            <label for="reject_reason">Reject reason (optional):</label>
+            <input id="reject_reason" type="text" name="reason" placeholder="Reason for rejection">
+          </div>
+          <button type="submit" class="btn btn-danger">✗ Reject</button>
         </form>
       </div>`;
     }

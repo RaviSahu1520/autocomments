@@ -100,6 +100,7 @@ export const defaultConfig: AppConfig = {
         base_landing_url: 'https://yoursite.com',
         supported_areas: ['gurugram', 'delhi', 'noida', 'faridabad', 'ghaziabad'],
         tone: 'Friendly, knowledgeable, helpful. Like a neighbor who happens to know real estate well.',
+        use_hinglish: false,
         forbidden_claims: [
             'guaranteed returns',
             'best price ever',

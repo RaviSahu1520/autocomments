@@ -78,5 +78,94 @@ export function createSchema(db: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_events_type ON events(type);
     CREATE INDEX IF NOT EXISTS idx_events_opp ON events(opportunity_id);
+
+    CREATE TABLE IF NOT EXISTS instagram_competitors (
+      id TEXT PRIMARY KEY,
+      instagram_id TEXT,
+      username TEXT NOT NULL,
+      display_name TEXT NOT NULL DEFAULT '',
+      profile_url TEXT NOT NULL DEFAULT '',
+      is_our_account INTEGER NOT NULL DEFAULT 0,
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(instagram_id),
+      UNIQUE(username)
+    );
+
+    CREATE TABLE IF NOT EXISTS instagram_relationships (
+      id TEXT PRIMARY KEY,
+      competitor_id TEXT NOT NULL REFERENCES instagram_competitors(id) ON DELETE CASCADE,
+      relation_type TEXT NOT NULL CHECK(relation_type IN ('follower','following')),
+      account_id TEXT NOT NULL DEFAULT '',
+      username TEXT NOT NULL DEFAULT '',
+      full_name TEXT NOT NULL DEFAULT '',
+      raw_json TEXT NOT NULL DEFAULT '{}',
+      imported_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(competitor_id, relation_type, account_id, username)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_ig_rel_comp ON instagram_relationships(competitor_id, relation_type);
+
+    CREATE TABLE IF NOT EXISTS instagram_posts (
+      id TEXT PRIMARY KEY,
+      competitor_id TEXT NOT NULL REFERENCES instagram_competitors(id) ON DELETE CASCADE,
+      post_id TEXT NOT NULL,
+      shortcode TEXT NOT NULL DEFAULT '',
+      permalink TEXT NOT NULL DEFAULT '',
+      caption TEXT NOT NULL DEFAULT '',
+      media_type TEXT NOT NULL DEFAULT 'unknown',
+      is_reel INTEGER NOT NULL DEFAULT 0,
+      posted_at TEXT NOT NULL DEFAULT '',
+      like_count INTEGER NOT NULL DEFAULT 0,
+      comment_count INTEGER NOT NULL DEFAULT 0,
+      raw_json TEXT NOT NULL DEFAULT '{}',
+      imported_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(competitor_id, post_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_ig_posts_comp ON instagram_posts(competitor_id, posted_at);
+
+    CREATE TABLE IF NOT EXISTS instagram_comments (
+      id TEXT PRIMARY KEY,
+      post_row_id TEXT NOT NULL REFERENCES instagram_posts(id) ON DELETE CASCADE,
+      comment_id TEXT NOT NULL,
+      account_id TEXT NOT NULL DEFAULT '',
+      username TEXT NOT NULL DEFAULT '',
+      text TEXT NOT NULL DEFAULT '',
+      like_count INTEGER NOT NULL DEFAULT 0,
+      posted_at TEXT NOT NULL DEFAULT '',
+      raw_json TEXT NOT NULL DEFAULT '{}',
+      imported_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(post_row_id, comment_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_ig_comments_post ON instagram_comments(post_row_id);
+
+    CREATE TABLE IF NOT EXISTS instagram_likers (
+      id TEXT PRIMARY KEY,
+      post_row_id TEXT NOT NULL REFERENCES instagram_posts(id) ON DELETE CASCADE,
+      account_id TEXT NOT NULL DEFAULT '',
+      username TEXT NOT NULL DEFAULT '',
+      raw_json TEXT NOT NULL DEFAULT '{}',
+      imported_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(post_row_id, account_id, username)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_ig_likers_post ON instagram_likers(post_row_id);
+
+    CREATE TABLE IF NOT EXISTS instagram_import_runs (
+      id TEXT PRIMARY KEY,
+      competitor_id TEXT NOT NULL REFERENCES instagram_competitors(id) ON DELETE CASCADE,
+      dataset_type TEXT NOT NULL CHECK(dataset_type IN ('followers','following','posts','comments','likers')),
+      records_received INTEGER NOT NULL DEFAULT 0,
+      records_upserted INTEGER NOT NULL DEFAULT 0,
+      records_skipped INTEGER NOT NULL DEFAULT 0,
+      error_count INTEGER NOT NULL DEFAULT 0,
+      summary_json TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_ig_import_runs_comp ON instagram_import_runs(competitor_id, created_at);
   `);
 }

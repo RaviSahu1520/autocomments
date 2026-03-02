@@ -7,16 +7,23 @@
     "apps/discord-bot"
   ],
   "scripts": {
-    "dev": "concurrently -n backend,bot -c blue,green \"npm run dev -w apps/backend\" \"npm run dev -w apps/discord-bot\"",
+    "dev": "npm run dev:backend",
+    "dev:all": "concurrently -k -n backend,bot \"npm run dev:backend\" \"npm run dev:bot\"",
     "dev:backend": "npm run dev -w apps/backend",
     "dev:bot": "npm run dev -w apps/discord-bot",
     "build": "npm run build -w apps/backend && npm run build -w apps/discord-bot",
-    "start": "concurrently -n backend,bot -c blue,green \"npm start -w apps/backend\" \"npm start -w apps/discord-bot\"",
+    "start": "npm run start:backend",
+    "start:all": "concurrently -k -n backend,bot \"npm run start:backend\" \"npm run start:bot\"",
     "start:backend": "npm start -w apps/backend",
-    "test": "npm test -w apps/backend"
+    "start:bot": "npm start -w apps/discord-bot",
+    "test": "npm test -w apps/backend",
+    "security:secrets": "node scripts/secret-scan.mjs",
+    "security:audit": "npm audit --omit=dev --audit-level=high",
+    "release:check": "npm run security:secrets && npm test && npm run build && npm run security:audit"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   },
   "engines": {

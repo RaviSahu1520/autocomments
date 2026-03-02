@@ -23,6 +23,8 @@ export function layout(title: string, content: string, extraHead = ''): string {
       <a href="/opportunities?status=pending">Queue</a>
       <a href="/opportunities?status=all">All</a>
       <a href="/quora/submit">+ Quora</a>
+      <a href="/instagram">Instagram</a>
+      <a href="/exports">Exports</a>
       <a href="/config">Config</a>
       <a href="/reports/weekly">Reports</a>
       <a href="/logout" class="btn-sm btn-outline">Logout</a>

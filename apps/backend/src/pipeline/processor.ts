@@ -12,9 +12,13 @@ let llmProvider: LlmProvider | null = null;
 
 function getLlmProvider(): LlmProvider {
     if (!llmProvider) {
-        const providerType = process.env.LLM_PROVIDER || 'openai';
+        const providerType = (process.env.LLM_PROVIDER || 'openai').toLowerCase();
+        const allowMock = process.env.ALLOW_MOCK_LLM === 'true' || process.env.NODE_ENV === 'test';
         if (providerType === 'mock') {
-            console.warn('[Pipeline] ⚠️  Using MOCK LLM provider — responses are synthetic, not real AI-generated.');
+            if (!allowMock) {
+                throw new Error('LLM_PROVIDER=mock is disabled. Set ALLOW_MOCK_LLM=true only for controlled local testing.');
+            }
+            console.warn('[Pipeline] ⚠️  Using MOCK LLM provider because ALLOW_MOCK_LLM=true.');
             llmProvider = new MockProvider();
         } else {
             if (!process.env.LLM_API_KEY) {
@@ -89,7 +93,7 @@ export async function processOpportunity(item: OpportunityItem): Promise<{ id: s
         }
 
         // 5. Generate drafts
-        const drafts = await provider.generateReplies(item, classification, config);
+        const drafts = await provider.generateReplies(item, classification, config, id);
         DraftRepo.upsert(id, drafts);
 
         // 6. Update status to pending
@@ -116,7 +120,7 @@ export async function processBatch(items: OpportunityItem[]): Promise<void> {
     console.log(`[Pipeline] Processing batch of ${items.length} items...`);
     for (const item of items) {
         await processOpportunity(item);
-        // Delay between LLM calls (2s to respect Gemini free-tier rate limits)
+        // Delay between LLM calls (2s) to respect provider rate limits.
         await new Promise(resolve => setTimeout(resolve, 2000));
     }
     console.log(`[Pipeline] Batch complete.`);

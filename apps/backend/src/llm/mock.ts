@@ -20,7 +20,7 @@ export class MockProvider implements LlmProvider {
         };
     }
 
-    async generateReplies(opportunity: OpportunityItem, classification: ClassificationResult, config: AppConfig): Promise<DraftResult> {
+    async generateReplies(opportunity: OpportunityItem, classification: ClassificationResult, config: AppConfig, _opportunityId?: string): Promise<DraftResult> {
         const city = classification.locations[0]?.name || 'your city';
         return {
             variant_short: `Great question! For ${classification.intent_type} options in ${city}, I'd recommend checking local listings and talking to verified agents. Happy to help with any specifics!`,

@@ -4,5 +4,9 @@ data/
 *.db
 *.db-journal
 *.db-wal
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.log
 .env
 .DS_Store

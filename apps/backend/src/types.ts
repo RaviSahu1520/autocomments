@@ -120,7 +120,7 @@ export interface EventRow {
 
 export interface LlmProvider {
     classify(opportunity: OpportunityItem, config: AppConfig): Promise<ClassificationResult>;
-    generateReplies(opportunity: OpportunityItem, classification: ClassificationResult, config: AppConfig): Promise<DraftResult>;
+    generateReplies(opportunity: OpportunityItem, classification: ClassificationResult, config: AppConfig, opportunityId?: string): Promise<DraftResult>;
 }
 
 // ─── Configuration ──────────────────────────────────────────────────
@@ -172,6 +172,7 @@ export interface AppConfig {
         base_landing_url: string;
         supported_areas: string[];
         tone: string;
+        use_hinglish: boolean;
         forbidden_claims: string[];
     };
     do_not_engage: {

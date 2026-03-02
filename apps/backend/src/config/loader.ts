@@ -10,16 +10,19 @@ let cachedConfig: AppConfig | null = null;
 export function loadConfig(): AppConfig {
     if (cachedConfig) return cachedConfig;
 
-    // Load from DB first
-    let dbConfig = ConfigRepo.get();
-
-    if (!dbConfig) {
+    const storedConfig = ConfigRepo.get();
+    if (!storedConfig) {
         // Initialize DB with defaults + env overrides
-        dbConfig = applyEnvOverrides({ ...defaultConfig });
-        ConfigRepo.set(dbConfig);
+        const seeded = applyEnvOverrides(cloneDefaultConfig());
+        ConfigRepo.set(seeded);
+        cachedConfig = seeded;
+        return cachedConfig;
     }
 
-    cachedConfig = dbConfig;
+    // Keep existing installations forward-compatible with new config fields.
+    const normalized = deepMerge(cloneDefaultConfig() as any, storedConfig as any) as AppConfig;
+    ConfigRepo.set(normalized);
+    cachedConfig = normalized;
     return cachedConfig;
 }
 
@@ -66,10 +69,15 @@ function applyEnvOverrides(config: AppConfig): AppConfig {
     if (env.SMTP_PASS) config.notifications.smtp.pass = env.SMTP_PASS;
     if (env.SMTP_FROM) config.notifications.smtp.from = env.SMTP_FROM;
     if (env.NOTIFICATION_EMAIL_TO) config.notifications.email_to = env.NOTIFICATION_EMAIL_TO;
-    if (env.COMPANY_NAME) config.brand.company_name = env.COMPANY_NAME;
-    if (env.BASE_LANDING_URL) config.brand.base_landing_url = env.BASE_LANDING_URL;
+    if (env.COMPANY_NAME) config.brand.company_name = env.COMPANY_NAME.trim();
+    if (env.BASE_LANDING_URL) config.brand.base_landing_url = env.BASE_LANDING_URL.trim();
+    if (env.USE_HINGLISH !== undefined) config.brand.use_hinglish = env.USE_HINGLISH === 'true';
 
     return config;
+}
+
+function cloneDefaultConfig(): AppConfig {
+    return JSON.parse(JSON.stringify(defaultConfig)) as AppConfig;
 }
 
 function deepMerge(target: any, source: any): any {

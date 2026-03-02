@@ -1,4 +1,5 @@
 import type { OpportunityItem, ClassificationResult, DraftResult, AppConfig, LlmProvider } from '../types.js';
+import { generateTrackingUrl, generateUtmUrl, getMediumForSource } from '../utils/utm.js';
 
 const CLASSIFIER_SYSTEM_PROMPT = `You are a real-estate intent classifier for the Indian market. Analyze online posts/messages to determine if they relate to real estate.
 
@@ -22,6 +23,10 @@ Rules:
 - needs should list specific requirements mentioned (e.g., "parking", "gym", "near metro").`;
 
 function buildDraftSystemPrompt(config: AppConfig): string {
+    const languageMode = config.brand.use_hinglish
+        ? 'Use Hinglish (Roman Hindi + English mix) naturally in all reply variants.'
+        : 'Use plain conversational English unless the source text itself is clearly Hinglish.';
+
     return `You are a helpful real-estate community reply assistant for ${config.brand.company_name}.
 
 Generate 3 reply variants for a community post about real estate. Follow these COMMUNITY SAFE REPLY RULES strictly:
@@ -32,6 +37,7 @@ Generate 3 reply variants for a community post about real estate. Follow these C
 5. Don't invent facts. If you don't know, say so or ask a clarifying question.
 6. Use a human, conversational tone. Vary your style. Not repetitive or robotic.
 7. DM mention only if the platform allows it.
+8. ${languageMode}
 
 Brand tone: ${config.brand.tone}
 Supported areas: ${config.brand.supported_areas.join(', ')}
@@ -68,12 +74,36 @@ Source: ${opportunity.source}`;
         return this.parseJson<ClassificationResult>(result, 'classification');
     }
 
-    async generateReplies(opportunity: OpportunityItem, classification: ClassificationResult, config: AppConfig): Promise<DraftResult> {
+    async generateReplies(opportunity: OpportunityItem, classification: ClassificationResult, config: AppConfig, opportunityId?: string): Promise<DraftResult> {
         const systemPrompt = buildDraftSystemPrompt(config);
 
-        const ctaBase = config.brand.base_landing_url;
-        const city = classification.locations[0]?.name || 'general';
-        const suggestedLink = `${ctaBase}/landing/${encodeURIComponent(city.toLowerCase())}`;
+        const ctaBase = (config.brand.base_landing_url || '').trim().replace(/\/$/, '');
+        const cityRaw = classification.locations[0]?.name || 'general';
+        const cityCampaign = cityRaw.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'general';
+
+        let suggestedLink = '';
+        if (ctaBase) {
+            const landingUrl = `${ctaBase}/landing/${encodeURIComponent(cityCampaign)}`;
+            try {
+                const utmUrl = generateUtmUrl(landingUrl, {
+                    source: opportunity.source,
+                    medium: getMediumForSource(opportunity.source),
+                    campaign: cityCampaign,
+                });
+                const appBaseUrl = (process.env.APP_BASE_URL || `http://localhost:${process.env.PORT || '3000'}`).trim();
+                suggestedLink = generateTrackingUrl(appBaseUrl, utmUrl, {
+                    source: opportunity.source,
+                    campaign: cityCampaign,
+                    opportunityId,
+                });
+            } catch {
+                suggestedLink = landingUrl;
+            }
+        }
+
+        const linkInstruction = suggestedLink
+            ? `If a link is appropriate, use this tracked URL: ${suggestedLink}`
+            : 'No tracked link is configured. Prefer no-link helpful replies.';
 
         const userMsg = `Generate reply variants for this ${opportunity.source} post:
 
@@ -88,7 +118,7 @@ Classification:
 - Timeline: ${classification.timeline}
 - Needs: ${classification.needs.join(', ') || 'none specified'}
 
-If a link is appropriate, use this tracked URL: ${suggestedLink}
+${linkInstruction}
 Source platform: ${opportunity.source}`;
 
         const result = await this.chatCompletion(systemPrompt, userMsg);
